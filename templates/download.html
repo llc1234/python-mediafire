@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download - DataFile</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent: #007AFF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .download-container {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .file-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .file-name {
+            font-size: 20px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        
+        .file-details {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+        
+        .file-details div {
+            margin-bottom: 8px;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .download-btn:hover {
+            background-color: #0056cc;
+        }
+        
+        .admin-link {
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .admin-link a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="download-container">
+        <div class="logo">DataFile</div>
+        
+        <div class="file-icon">📄</div>
+        
+        <div class="file-name">{{ file.name }}</div>
+        
+        <div class="file-details">
+            <div>Size: {{ file.size }}</div>
+            <div>Uploaded: {{ file.upload_date }}</div>
+            <div>Downloads: {{ file.downloads }}</div>
+        </div>
+        
+        <a href="{{ url_for('download_file', file_id=file_id) }}" class="download-btn">Download File</a>
+        
+        {% if session.username and session.username == 'admin' %}
+            <div class="admin-link">
+                <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
