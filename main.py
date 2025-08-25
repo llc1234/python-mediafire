@@ -38,8 +38,34 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+# ---------------------- Sync DB with Uploads Folder ----------------------
+def sync_filesystem_and_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
 
+    # Get all file IDs from DB
+    c.execute("SELECT id FROM files")
+    db_files = set(row[0] for row in c.fetchall())
+
+    # Get all file IDs from filesystem
+    fs_files = set(os.listdir(app.config['UPLOAD_FOLDER']))
+
+    # Files in folder but not in DB -> delete from folder
+    for file_id in fs_files - db_files:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_id)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    # Files in DB but not in folder -> delete from DB
+    for file_id in db_files - fs_files:
+        c.execute("DELETE FROM files WHERE id=?", (file_id,))
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
+sync_filesystem_and_db()
 
 # ---------------------- Helpers ----------------------
 def generate_file_id(filename):
