@@ -40,21 +40,22 @@ _log_file_handle = None
 def DataLogger(text):
     global _current_log_date, _log_file_handle
 
-    log_date = datetime.now().strftime("%Y-%m-%d")
-    if _current_log_date != log_date:
-        # Close old log file if open
-        if _log_file_handle:
-            _log_file_handle.close()
-        # Open new log file
-        log_filename = get_log_filename()
-        _log_file_handle = open(log_filename, "a", encoding="utf-8")
-        _current_log_date = log_date
+    if DB_LOGGER:
+        log_date = datetime.now().strftime("%Y-%m-%d")
+        if _current_log_date != log_date:
+            # Close old log file if open
+            if _log_file_handle:
+                _log_file_handle.close()
+            # Open new log file
+            log_filename = get_log_filename()
+            _log_file_handle = open(log_filename, "a", encoding="utf-8")
+            _current_log_date = log_date
 
-    log_line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] - {text}"
-    if DB_LOGGER_PRINT:
-        print(log_line)  # Console
-    _log_file_handle.write(log_line + "\n")
-    _log_file_handle.flush()
+        log_line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] - {text}"
+        if DB_LOGGER_PRINT:
+            print(log_line)  # Console
+        _log_file_handle.write(log_line + "\n")
+        _log_file_handle.flush()
 
 """
 def DataLogger(text):
