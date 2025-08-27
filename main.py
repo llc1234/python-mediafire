@@ -305,18 +305,21 @@ def upload_file():
         DataLogger("[Auth] - upload denied (not logged in)")
         return redirect(url_for('login'))
 
-    if 'file' not in request.files:
-        flash('No file selected', 'error')
-        DataLogger("[Upload] - no file in request")
+    if 'files' not in request.files:
+        flash('No files selected', 'error')
+        DataLogger("[Upload] - no files in request")
         return redirect(url_for('dashboard'))
 
-    file = request.files['file']
-    if file.filename == '':
-        flash('No file selected', 'error')
-        DataLogger("[Upload] - empty filename")
+    files = request.files.getlist('files')
+    if not files:
+        flash('No files selected', 'error')
+        DataLogger("[Upload] - empty file list")
         return redirect(url_for('dashboard'))
 
-    if file:
+    for file in files:
+        if file.filename == '':
+            continue
+
         filename = secure_filename(file.filename)
         file_id = generate_file_id(filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_id)
@@ -349,8 +352,7 @@ def upload_file():
         conn.close()
         DataLogger(f"[Upload] - inserted into DB {file_id} ({filename}, {formatted_size})")
 
-        flash(f'File "{filename}" uploaded successfully', 'success')
-
+    flash(f'{len(files)} file(s) uploaded successfully', 'success')
     return redirect(url_for('dashboard'))
 
 

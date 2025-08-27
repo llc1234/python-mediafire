@@ -403,7 +403,7 @@
     <section class="upload-section">
         <h2>Upload File</h2>
         <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="file" id="fileInput" class="file-input" required>
+            <input type="file" name="files" id="fileInput" class="file-input" multiple required>
             <button type="submit" class="upload-btn">Upload</button>
         </form>
         <div class="progress-bar" id="progressBar">
@@ -508,7 +508,9 @@
             }
             
             const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
             
             const xhr = new XMLHttpRequest();
             
