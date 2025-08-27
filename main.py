@@ -23,7 +23,6 @@ DB_FILE = 'files.db'
 DB_LOGGER = True
 DB_LOGGER_DIR = "logs"
 DB_LOGGER_PRINT = True
-DB_LOGGER_FILENAME = "logg.txt"
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -470,6 +469,7 @@ if __name__ == '__main__':
     init_db()
     SeeIfPasswordIsDefalt()
     sync_filesystem_and_db()
+
 
 
     app.run(host="0.0.0.0", port=8000, debug=False)
