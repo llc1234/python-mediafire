@@ -457,7 +457,7 @@ def system_stats():
     
     # Format the data for display
     
-    DataLogger(f"[Route] - /system_stats - {stats}")
+    # DataLogger(f"[Route] - /system_stats - {stats}")
     
     return jsonify(stats)
 
@@ -468,5 +468,6 @@ if __name__ == '__main__':
     init_db()
     SeeIfPasswordIsDefalt()
     sync_filesystem_and_db()
+
 
     app.run(host="0.0.0.0", port=8000, debug=False)
