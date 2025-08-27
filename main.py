@@ -1,8 +1,10 @@
 import os
+import time
+import psutil
 import sqlite3
 import hashlib
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash
+from datetime import datetime, timedelta
+from flask import Flask, render_template, request, redirect, url_for, send_file, session, flash, jsonify
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -63,6 +65,72 @@ def DataLogger(text):
         print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {text}")
 
 """
+
+# ---------------------- System Monitoring --------------------
+
+network_stats = {
+    'bytes_sent': 0,
+    'bytes_recv': 0,
+    'last_check': time.time()
+}
+
+def get_system_stats():
+    """Get current system statistics"""
+    # Disk usage
+    disk_usage = psutil.disk_usage('/')
+    storage_used = disk_usage.used
+    storage_left = disk_usage.free
+    storage_total = disk_usage.total
+    
+    # RAM usage
+    ram = psutil.virtual_memory()
+    ram_used = ram.used
+    ram_total = ram.total
+    ram_percent = ram.percent
+    
+    # CPU usage
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    
+    # Network usage (calculate difference from last check)
+    net_io = psutil.net_io_counters()
+    current_time = time.time()
+    time_diff = current_time - network_stats['last_check']
+    
+    if time_diff > 0:
+        sent_speed = (net_io.bytes_sent - network_stats['bytes_sent']) / time_diff
+        recv_speed = (net_io.bytes_recv - network_stats['bytes_recv']) / time_diff
+    else:
+        sent_speed = 0
+        recv_speed = 0
+    
+    # Update network stats for next calculation
+    network_stats['bytes_sent'] = net_io.bytes_sent
+    network_stats['bytes_recv'] = net_io.bytes_recv
+    network_stats['last_check'] = current_time
+    
+    # Files count and DB size
+    files_count = len(get_all_files())
+    db_size = os.path.getsize(DB_FILE) if os.path.exists(DB_FILE) else 0
+    
+    # System uptime
+    uptime_seconds = time.time() - psutil.boot_time()
+    uptime_str = str(timedelta(seconds=int(uptime_seconds)))
+    
+    return {
+        'storage_used': format_bytes(storage_used),
+        'storage_left': format_bytes(storage_left),
+        'storage_total': format_bytes(storage_total),
+        'ram_used': format_bytes(ram_used),
+        'ram_total': format_bytes(ram_total),
+        'ram_percent': f"{ram_percent}%",
+        'cpu_percent': f"{cpu_percent}%",
+        'network_sent': format_speed(sent_speed),
+        'network_recv': format_speed(recv_speed),
+        'files_count': files_count,
+        'db_size': format_bytes(db_size),
+        'uptime': uptime_str
+    }
+
 
 # ---------------------- Password Warning --------------------
 
@@ -136,6 +204,22 @@ def sync_filesystem_and_db():
 # SeeIfPasswordIsAdmin()
 # sync_filesystem_and_db()
 
+# ---------------------- Format Helpers ----------------------
+def format_bytes(size_bytes):
+    """Convert bytes to human-readable format"""
+    if size_bytes == 0:
+        return "0B"
+    size_names = ["B", "KB", "MB", "GB", "TB"]
+    i = 0
+    while size_bytes >= 1024 and i < len(size_names) - 1:
+        size_bytes /= 1024.0
+        i += 1
+    return f"{size_bytes:.2f} {size_names[i]}"
+
+def format_speed(speed_bytes):
+    """Convert bytes per second to human-readable format"""
+    return format_bytes(speed_bytes) + "/s"
+
 # ---------------------- Helpers ----------------------
 def generate_file_id(filename):
     timestamp = str(datetime.now().timestamp())
@@ -208,7 +292,10 @@ def dashboard():
 
     files = get_all_files()
     DataLogger(f"[Dashboard] - showing {len(files)} files")
-    return render_template('dashboard.html', files=files)
+
+    system_stats = get_system_stats()
+
+    return render_template('dashboard.html', files=files, system_stats=system_stats)
 
 
 @app.route('/upload', methods=['POST'])
@@ -359,6 +446,20 @@ def download_file(file_id):
 
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_id)
     return send_file(file_path, as_attachment=True, download_name=file["name"])
+
+
+@app.route('/system_stats')
+def system_stats():
+    if 'username' not in session or session['username'] != DEFAULT_USERNAME:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    stats = get_system_stats()
+    
+    # Format the data for display
+    
+    DataLogger(f"[Route] - /system_stats - {stats}")
+    
+    return jsonify(stats)
 
 
 if __name__ == '__main__':

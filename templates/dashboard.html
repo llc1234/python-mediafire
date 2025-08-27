@@ -13,6 +13,10 @@
             --accent: #007AFF;
             --error: #FF453A;
             --success: #34C759;
+            --warning: #FF9F0A;
+            --info: #5AC8FA;
+            --system-card-bg: #2c2c2c;
+            --system-card-border: #3c3c3c;
         }
         
         * {
@@ -61,6 +65,105 @@
         
         .logout-btn:hover {
             background-color: rgba(0, 122, 255, 0.1);
+        }
+        
+        /* System Status Section */
+        .system-status {
+            margin-bottom: 30px;
+        }
+        
+        .system-status h2 {
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background-color: var(--system-card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--system-card-border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-card h3 {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+        
+        .status-progress {
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .status-progress-inner {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-storage {
+            background: linear-gradient(90deg, #FF9F0A, #FFD60A);
+        }
+        
+        .progress-ram {
+            background: linear-gradient(90deg, #34C759, #30D158);
+        }
+        
+        .progress-cpu {
+            background: linear-gradient(90deg, #007AFF, #5AC8FA);
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .network-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .network-stat {
+            text-align: center;
+        }
+        
+        .network-stat .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .network-stat .value {
+            font-size: 16px;
+            font-weight: 600;
         }
         
         .upload-section {
@@ -228,6 +331,75 @@
         {% endwith %}
     </div>
     
+    <!-- System Status Section -->
+    <section class="system-status">
+        <h2>System Status</h2>
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>Storage</h3>
+                <div class="status-value" id="storage-used">{{ system_stats.storage_used }}</div>
+                <div class="status-progress">
+                    <div class="status-progress-inner progress-storage" id="storage-progress"></div>
+                </div>
+                <div class="status-label">
+                    <span>Used</span>
+                    <span id="storage-left">{{ system_stats.storage_left }} free</span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Memory</h3>
+                <div class="status-value" id="ram-used">{{ system_stats.ram_used }}</div>
+                <div class="status-progress">
+                    <div class="status-progress-inner progress-ram" id="ram-progress"></div>
+                </div>
+                <div class="status-label">
+                    <span>Used</span>
+                    <span id="ram-percent">{{ system_stats.ram_percent }}</span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>CPU</h3>
+                <div class="status-value" id="cpu-percent">{{ system_stats.cpu_percent }}</div>
+                <div class="status-progress">
+                    <div class="status-progress-inner progress-cpu" id="cpu-progress"></div>
+                </div>
+                <div class="status-label">
+                    <span>Utilization</span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Network</h3>
+                <div class="network-stats">
+                    <div class="network-stat">
+                        <div class="value" id="network-sent">{{ system_stats.network_sent }}</div>
+                        <div class="label">Upload</div>
+                    </div>
+                    <div class="network-stat">
+                        <div class="value" id="network-recv">{{ system_stats.network_recv }}</div>
+                        <div class="label">Download</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Files</h3>
+                <div class="status-value" id="files-count">{{ system_stats.files_count }}</div>
+                <div class="status-label">Total Files</div>
+                <div class="status-value" id="db-size">{{ system_stats.db_size }}</div>
+                <div class="status-label">Database Size</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Uptime</h3>
+                <div class="status-value" id="uptime">{{ system_stats.uptime }}</div>
+                <div class="status-label">System Uptime</div>
+            </div>
+        </div>
+    </section>
+    
     <section class="upload-section">
         <h2>Upload File</h2>
         <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
@@ -277,6 +449,52 @@
     </section>
     
     <script>
+        // Function to update system stats
+        function updateSystemStats() {
+            fetch('/system_stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Update storage
+                    document.getElementById('storage-used').textContent = data.storage_used;
+                    document.getElementById('storage-left').textContent = data.storage_left + ' free';
+                    
+                    // Update RAM
+                    document.getElementById('ram-used').textContent = data.ram_used;
+                    document.getElementById('ram-percent').textContent = data.ram_percent;
+                    
+                    // Update CPU
+                    document.getElementById('cpu-percent').textContent = data.cpu_percent;
+                    
+                    // Update network
+                    document.getElementById('network-sent').textContent = data.network_sent;
+                    document.getElementById('network-recv').textContent = data.network_recv;
+                    
+                    // Update files and DB
+                    document.getElementById('files-count').textContent = data.files_count;
+                    document.getElementById('db-size').textContent = data.db_size;
+                    
+                    // Update uptime
+                    document.getElementById('uptime').textContent = data.uptime;
+                    
+                    // Update progress bars
+                    const storageProgress = parseFloat(data.storage_used) / parseFloat(data.storage_total) * 100;
+                    document.getElementById('storage-progress').style.width = storageProgress + '%';
+                    
+                    document.getElementById('ram-progress').style.width = data.ram_percent.replace('%', '') + '%';
+                    document.getElementById('cpu-progress').style.width = data.cpu_percent.replace('%', '') + '%';
+                })
+                .catch(error => {
+                    console.error('Error fetching system stats:', error);
+                });
+        }
+        
+        // Update stats every 2 seconds
+        setInterval(updateSystemStats, 5000);
+        
+        // Initial update
+        updateSystemStats();
+        
+        // File upload handling
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
