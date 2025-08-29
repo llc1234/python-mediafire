@@ -109,12 +109,6 @@
         </div>
         
         <a href="{{ url_for('download_file', file_id=file_id) }}" class="download-btn">Download File</a>
-        
-        {% if session.username and session.username == 'admin' %}
-            <div class="admin-link">
-                <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
-            </div>
-        {% endif %}
     </div>
 </body>
 </html>
