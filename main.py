@@ -14,7 +14,7 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 * 1024  # 50 GB
 
 # Default login credentials
 DEFAULT_USERNAME = 'admin'
-DEFAULT_PASSWORD = 'admin'
+DEFAULT_PASSWORD_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' # default password is 'admin' # Change this in production with sha256 hash
 
 # SQLite database file
 DB_FILE = 'files.db'
@@ -135,9 +135,9 @@ def get_system_stats():
 
 
 def SeeIfPasswordIsDefalt():
-    if DEFAULT_USERNAME == "admin" and DEFAULT_PASSWORD == "admin":
+    if DEFAULT_USERNAME == "admin" and DEFAULT_PASSWORD_HASH == "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918":
         DataLogger("[WARNING] - username and password is 'admin'")
-    elif DEFAULT_PASSWORD == "admin":
+    elif DEFAULT_PASSWORD_HASH == "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918":
         DataLogger("[WARNING] - password is 'admin'")
 
     if app.secret_key == 'your-secret-key':
@@ -262,8 +262,8 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         DataLogger(f"[Auth] - login attempt user={username}")
-
-        if username == DEFAULT_USERNAME and password == DEFAULT_PASSWORD:
+        
+        if username == DEFAULT_USERNAME and hashlib.sha256(password.encode("utf-8")).hexdigest() == DEFAULT_PASSWORD_HASH:
             session['username'] = username
             DataLogger("[Auth] - login success")
             return redirect(url_for('dashboard'))
